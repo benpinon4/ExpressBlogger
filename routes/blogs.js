@@ -1,6 +1,8 @@
 var express = require("express");
 var router = express.Router();
 
+var { validateBlogData } = require("../validation/blogs")
+
 const sampleBlogs = [
   {
     title: "dicta",
@@ -82,6 +84,77 @@ router.get("/single/:blogTitleToGet", function (req, res, next) {
   }
 });
 
+router.post("/add-blog", function (req, res, next){
+  const blogData = {
+    title: req.body.title,
+    author: req.body.author,
+    text: req.body.text,
+    createdAt: new Date(),
+    lastModified: new Date(),
+  }
+  const userDataCheck = validateBlogData(blogData)
+
+  console.log(userDataCheck)
+  if (userDataCheck.isValid === false) {
+		res.json({
+			success: false,
+		})
+		return;
+	}
+  sampleBlogs.push(blogData)
+  res.json({
+    success: true,
+    blogs: sampleBlogs
+  })
+})
+
+router.put("/modify-blog/:blogToModify", function (req, res, next) {
+  const blogTitleToModify = req.params.blogToModify
+
+  const blogToModifyIndex = sampleBlogs.findIndex((blog) => {
+    return blog.title === blogTitleToModify
+  })
+  console.log(blogToModifyIndex)
+
+  const blogToModify = sampleBlogs[blogToModifyIndex]
+  
+  const updatedblogData = {
+    title: blogToModify.title,
+    author: blogToModify.author,
+    text: blogToModify.text,
+    createdAt: blogToModify.createdAt,
+    lastModified: new Date()
+  }
+
+  if (req.body.title !== "") {
+		updatedblogData.title = req.body.title
+	}
+
+	if (req.body.author !== "") {
+		updatedblogData.author = req.body.author
+	}
+
+	if (req.body.text !== "") {
+		updatedblogData.text = req.body.text
+	}
+  const userDataCheck = validateBlogData(updatedblogData)
+
+  console.log(userDataCheck)
+  if (userDataCheck.isValid === false) {
+		res.json({
+			success: false,
+		})
+		return;
+	}
+
+  sampleBlogs[blogToModifyIndex] = updatedblogData
+res.json({
+  sucess: true,
+  blogToModify: blogTitleToModify,
+  blogs: sampleBlogs
+})
+
+})
 router.delete("/single/:blogTitleToDelete", function (req, res, next) {
   console.log(req.params.blogTitleToDelete);
 
@@ -110,5 +183,7 @@ router.delete("/single/:blogTitleToDelete", function (req, res, next) {
     });
   }
 });
+
+
 
 module.exports = router;
